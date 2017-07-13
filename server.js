@@ -65,34 +65,36 @@ app.post('/posts', (req, res) => {
 });
 
 app.post('/users', (req, res) => {
+ 
+
 
   let { username, password, firstName, lastName } = req.body;
+  console.log('password', password)
+  console.log('hashed', User.hashPassword(password))
+  return  User.create({ username, password:User.hashPassword(password), firstName, lastName });
+//   return User.find({ username }).then(user => {
+//     // if (user[0].username === username) {
+//     //   return res.status(422).json({ message: 'Authentication Failed' });
+//     // }
 
-  return User.find({username}).count().exec().then(count => {
-      if (count > 0) {
-        return Promise.reject({
-          name: 'AuthenticationError',
-          message: 'Username is already in use. Please choose another.'
-
-        });
-      }
-      return User.hashPassword(password);
-    })
-    //Adds the user to the database, storing a salted and hashed version of the password
-    .then(hash => {
-      return User.create({ username, password: hash, firstName, lastName });
-    })
-    //Returns a 201 Created status, with the API representation of the user as the response body
-    .then(user => {
-      return res.status(201).json(user.apiRepr());
-    })
-    //QUESTION.. why is the catch needed if we have the promise.reject above?
-    .catch(err => {
-      if (err.name === 'AuthenticationError') {
-        return res.status(422).json({ message: err.message });
-      }
-      res.status(500).json({ message: 'Internal server error' });
-    });
+//     //return User.hashPassword(password);
+//   })
+//     //Adds the user to the database, storing a salted and hashed version of the password
+//     // .then(hash => {
+//     //   return User.create({ username, password: User.hashPassword(password), firstName, lastName });
+//     // })
+//     // //Returns a 201 Created status, with the API representation of the user as the response body
+//     // .then(user => {
+//     //   return res.status(201).json(user.apiRepr());
+//     // })
+//     //QUESTION.. why is the catch needed if we have the promise.reject above?
+//     .catch(err => {
+//       console.log(err);
+//       // if (err.name === 'AuthenticationError') {
+//       //   return res.status(422).json({ message: err.message });
+//       // }
+//       // res.status(500).json({ message: 'Internal server error' });
+//     });
 });
 
 
