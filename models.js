@@ -11,10 +11,10 @@ const blogPostSchema = mongoose.Schema({
 });
 
 const userSchema = mongoose.Schema({
-  username: { type: String, required: true },
+  username: { type: String, required: true, unique: true},
   password: { type: String, required: true },
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true }
+  firstName: { type: String, required: true, default: ""},
+  lastName: { type: String, required: true, default: ""}
 })
 
 userSchema.statics.hashPassword = function(password) {
@@ -28,9 +28,11 @@ userSchema.methods.validatePassword = function(password) {
 }
 
 userSchema.methods.apiRepr = function() {
-username: this.username
-firstName: this.firstName
-lastName: this.lastName
+  return {
+    username: this.username || "",
+    firstName: this.firstName || "",
+    lastName: this.lastName || ""
+  };
 }
 
 blogPostSchema.virtual('authorName').get(function () {

@@ -68,9 +68,7 @@ app.post('/users', (req, res) => {
 
   let { username, password, firstName, lastName } = req.body;
 
-  return User.find({ username }).count().exec()
-    //username is already taken
-    .then(count => {
+  return User.find({username}).count().exec().then(count => {
       if (count > 0) {
         return Promise.reject({
           name: 'AuthenticationError',
