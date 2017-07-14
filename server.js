@@ -2,8 +2,8 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
 const morgan = require('morgan');
-const passport = require('passport');
-var bcrypt = require('bcrypt');
+//const passport = require('passport');
+//const bcrypt = require('bcrypt');
 
 const { DATABASE_URL, PORT } = require('./config');
 const { BlogPost, User } = require('./models');
@@ -14,7 +14,6 @@ app.use(morgan('common'));
 app.use(bodyParser.json());
 
 mongoose.Promise = global.Promise;
-
 
 app.get('/posts', (req, res) => {
   BlogPost
@@ -65,32 +64,42 @@ app.post('/posts', (req, res) => {
     });
 });
 
+/**
+ * create a post user endpoint
+ *   -creates a user in the db
+ * 
+ * before creating a user, does the user exist
+ * 
+ * add authentication with hardcoded username and password
+ * 
+ * update authentication to use username and password in db
+ * 
+ * use hashing
+ */
+
 app.post('/users', (req, res) => {
 
-
   let { username, password, firstName, lastName } = req.body;
-  var hash = bcrypt.hashSync(password, 10);
 
-  
-  return User.find({ username }).then(user => {
-    if (user[0].username === username) {
-      return res.status(422).json({ message: 'Authentication Failed' });
-    }
+  return User.find({ username }).count()
+    .then(count => {
 
-    //return User.hashPassword(password);
-  })
-    //Adds the user to the database, storing a salted and hashed version of the password
-    .then(hash => {
-      return User.create({ username, password: hash, firstName, lastName });
+      if (count > 0) {
+        console.log('username already exists');
+        return res.status(422).send('username already exists');
+
+      }
+      console.log('create new user');
+      return User.create({ username, password, firstName, lastName });
     })
-    //Returns a 201 Created status, with the API representation of the user as the response body
+
     .then(user => {
       console.log("user created")
       return res.status(201).json(user.apiRepr());
     })
-    //QUESTION.. why is the catch needed if we have the promise.reject above?
-    .catch(err => {
 
+    .catch(err => {
+      console.log('error', err)
       if (err.name === 'AuthenticationError') {
         return res.status(422).json({ message: err.message });
       }
@@ -200,3 +209,6 @@ if (require.main === module) {
 };
 
 module.exports = { runServer, app, closeServer };
+
+
+
