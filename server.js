@@ -2,7 +2,10 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
 const morgan = require('morgan');
-//const passport = require('passport');
+const passport = require('passport');
+
+const {BasicStrategy} = require('passport-http');
+
 //const bcrypt = require('bcrypt');
 
 const { DATABASE_URL, PORT } = require('./config');
@@ -14,6 +17,8 @@ app.use(morgan('common'));
 app.use(bodyParser.json());
 
 mongoose.Promise = global.Promise;
+
+
 
 app.get('/posts', (req, res) => {
   BlogPost
@@ -77,7 +82,7 @@ app.post('/posts', (req, res) => {
  * use hashing
  */
 
-app.post('/users', (req, res) => {
+app.post('/users', passport.authenticare, (req, res) => {
 
   let { username, password, firstName, lastName } = req.body;
 
