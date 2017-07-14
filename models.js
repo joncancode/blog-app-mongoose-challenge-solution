@@ -20,11 +20,9 @@ const userSchema = mongoose.Schema({
 
 
 
-// userSchema.statics.hashPassword = function (password) {
-//   return bcrypt.hash(password, 10, function (err, hash) {
-//     // Store hash in your password DB.
-//   });
-// }
+userSchema.statics.hashPassword = function (password) {
+  return bcrypt.hash(password, 10);
+}
 
 userSchema.methods.validatePassword = function (password) {
   return bcrypt

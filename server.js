@@ -18,7 +18,31 @@ app.use(bodyParser.json());
 
 mongoose.Promise = global.Promise;
 
+const basicStrategy = new BasicStrategy(function (username, password, done) {
+  let user;
+  User
+    .findOne({username: username})
+    
+    .then(_user => {
+      user = _user;
+      if (!user) {
+        return done(null, false, {message: 'Incorrect username'});
+      }
+      console.log(password, user.password, password === user.password)
+      return password === user.password;//user.validatePassword(password);
+    })
+    .then(isValid => {
+      if (!isValid) {
+        return done(null, false, {message: 'Incorrect password'});
+      }
+      else {
+        return done(null, user);
+      }
+    });
+});
 
+passport.use(basicStrategy);
+const authenticate = passport.authenticate('basic', {session: false});
 
 app.get('/posts', (req, res) => {
   BlogPost
@@ -44,7 +68,7 @@ app.get('/posts/:id', (req, res) => {
     });
 });
 
-app.post('/posts', (req, res) => {
+app.post('/posts', authenticate, (req, res) => {
 
   const requiredFields = ['title', 'content', 'author'];
   for (let i = 0; i < requiredFields.length; i++) {
@@ -76,14 +100,16 @@ app.post('/posts', (req, res) => {
  * before creating a user, does the user exist
  * 
  * add authentication with hardcoded username and password
- * 
+ *
  * update authentication to use username and password in db
  * 
  * use hashing
  */
 
-app.post('/users', passport.authenticare, (req, res) => {
 
+
+app.post('/users', authenticate, (req, res) => {
+  
   let { username, password, firstName, lastName } = req.body;
 
   return User.find({ username }).count()
@@ -94,10 +120,11 @@ app.post('/users', passport.authenticare, (req, res) => {
         return res.status(422).send('username already exists');
 
       }
-      console.log('create new user');
-      return User.create({ username, password, firstName, lastName });
+      return User.hashPassword(password);
     })
-
+    .then(hash => {
+      return User.create({username, password: hash, firstName, lastName});
+    })
     .then(user => {
       console.log("user created")
       return res.status(201).json(user.apiRepr());
